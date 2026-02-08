@@ -1,30 +1,37 @@
 import cv2
 import numpy as np
 
-# 1. تحميل الصورة الأصلية
+# 1. تحميل الصورة
 img = cv2.imread("fdss.png")
+# ملاحظة: يفضل تصغير الصورة إذا كانت كبيرة جداً لأن CSS سيتجمد مع آلاف البكسلات
+# img = cv2.resize(img, (50, 50)) 
 
-# 2. إعداد القناع والمصفوفات لخوارزمية GrabCut
-mask = np.zeros(img.shape[:2], np.uint8)
-bg = np.zeros((1, 65), np.float64)
-fg = np.zeros((1, 65), np.float64)
+# 2. تحويل الصورة من BGR (الافتراضي في OpenCV) إلى RGB
+img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-# 3. تحديد المستطيل المحيط بالكائن (نفس إحداثيات الصورة)
-rect = (10, 10, img.shape[1]-20, img.shape[0]-20)
+height, width, _ = img.shape
 
-# 4. تشغيل خوارزمية العزل
-cv2.grabCut(img, mask, rect, bg, fg, 5, cv2.GC_INIT_WITH_RECT)
+# 3. فتح ملف نصي لحفظ الكود
+with open("pixel_art_css.txt", "w") as f:
+    f.write(".pixel-art {\n")
+    f.write("  width: 1px;\n")
+    f.write("  height: 1px;\n")
+    f.write("  box-shadow:\n")
 
-# 5. تحويل القناع إلى قيم ثنائية (0 للخلفية و 1 للمقدمة)
-mask2 = np.where((mask==2)|(mask==0), 0, 1).astype('uint8')
+    shadows = []
+    
+    # 4. الدوران على كل بكسل واستخراج إحداثياته ولونه
+    for y in range(height):
+        for x in range(width):
+            r, g, b = img_rgb[y, x]
+            
+            # تنسيق بكسل واحد: x-offset y-offset color
+            # نستخدم x+1 و y+1 لتجنب الصفر
+            pixel_css = f"    {x+1}px {y+1}px rgb({r},{g},{b})"
+            shadows.append(pixel_css)
 
-# 6. إضافة قناة الشفافية (Alpha Channel)
-# نقوم بضرب القناع في 255 لتحويل القيم من (0 و 1) إلى (0 و 255)
-alpha = mask2 * 255
+    # 5. دمج كل البكسلات بفاصلة وكتابتها
+    f.write(",\n".join(shadows))
+    f.write(";\n}")
 
-# 7. فصل قنوات الألوان الأصلية (B, G, R) ودمجها مع قناة ألفا الجديدة
-b_channel, g_channel, r_channel = cv2.split(img)
-result = cv2.merge((b_channel, g_channel, r_channel, alpha))
-
-# 8. حفظ الصورة النهائية بصيغة PNG لدعم الشفافية
-cv2.imwrite("output_transparent.png", result)
+print("تم بنجاح! افتح ملف pixel_art_css.txt لنسخ الكود.")
