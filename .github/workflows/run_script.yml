@@ -1,9 +1,9 @@
-name: Remove Background Action
+name: Image to CSS Pixel Art
 
 on:
   push:
-    branches: [ "main" ] # يشتغل الأكشن عند كل رفع للكود على الفرع الرئيسي
-  workflow_dispatch: # يتيح لك تشغيل الأكشن يدوياً من واجهة جيتهاب
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4 # جلب ملفاتك من المستودع للسيرفر
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -21,14 +21,14 @@ jobs:
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # سنقوم بتثبيت المكتبات مباشرة للتأكد من عدم وجود أخطاء في requirements.txt
+        pip install opencv-python-headless numpy
 
-    - name: Run Background Removal Script
+    - name: Run Script
       run: python main.py
 
-    - name: Upload Result Image
-      uses: actions/upload-artifact@v4 # لرفع الصورة الناتجة كملف قابل للتحميل
+    - name: Upload CSS Artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: transparent-image
-        path: output_transparent.png
-
+        name: css-pixel-art-result
+        path: pixel_art_css.txt # هذا الاسم يجب أن يطابق تماماً ما كتبته في كود البايثون
